@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from "react";
+import axios from "axios";
 import { Link } from "react-router-dom";
 
 const Login = () => {
-  const [id, setId] = useState("");
-  const [pw, setPw] = useState("");
+  const [id, setId] = useState("admin");
+  const [pw, setPw] = useState("1234");
 
   const pwInputRef = useRef(null);
   const idInputRef = useRef(null);
@@ -14,26 +15,34 @@ const Login = () => {
     }
   }, []);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
 
-    if (!id || !pw) {
-      alert("내용을 다 입력하세요.");
-      if (!id && idInputRef.current) {
-        idInputRef.current.focus();
-      }
-      if (!pw && pwInputRef.current) {
-        pwInputRef.current.focus();
-      }
-      return;
+    switch (true) {
+      case !id:
+        return idInputRef.current?.focus();
+      case !pw:
+        return pwInputRef.current?.focus();
     }
-
-    console.log("로그인 시도: ", id, pw);
+    //http://localhost:8080/
+    try {
+      const res = await axios.post("/api/login", {
+        id,
+        pw,
+      });
+      console.log("서버 응답:", res.data);
+      alert("로그인되셨습니다.");
+      // localStorage.setItem("token", res.data.token);
+      // navigate("/home");
+    } catch (err) {
+      console.error("로그인 실패:", err);
+      alert("로그인 실패! 서버 연결을 확인하세요.");
+    }
   };
 
   return (
     <div>
-        <h1>TeamTalk</h1>
+      <h1>TeamTalk</h1>
       <ul>
         <form onSubmit={handleLogin}>
           아이디
@@ -53,10 +62,10 @@ const Login = () => {
             placeholder="비밀번호"
           />
           <br />
-          <button>아이디 찾기</button>
-          <button>비밀번호 찾기</button>
-          <Link to="./Signup">
-            <button>회원가입</button>
+          <button type="button">아이디 찾기</button>
+          <button type="button">비밀번호 찾기</button>
+          <Link to="/signup">
+            <button type="button">회원가입</button>
           </Link>
           <br />
           <button type="submit">로그인</button>
