@@ -1,5 +1,6 @@
+// 기존 주석 유지 + 변경 라인만 수정
 import { useState, useEffect, useRef } from "react";
-import axios from "axios";
+import api from "../api/axios"; // ✅ axios 인스턴스 사용
 import { Link } from "react-router-dom";
 
 const Login = () => {
@@ -26,9 +27,10 @@ const Login = () => {
     }
     //http://localhost:8080/
     try {
-      const res = await axios.post("/api/login", {
-        id,
-        pw,
+      // ✅ 경로와 필드명을 백엔드와 동일하게 수정
+      const res = await api.post("/api/auth/login", {
+        username: id,
+        password: pw,
       });
       console.log("서버 응답:", res.data);
       alert("로그인되셨습니다.");
