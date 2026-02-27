@@ -1,79 +1,53 @@
-// 기존 주석 유지 + 변경 라인만 수정
-import { useState, useEffect, useRef } from "react";
-import api from "../api/axios"; // ✅ axios 인스턴스 사용
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import api from "../api/axios";
+import LoginForm from "../components/Login";
 
 const Login = () => {
   const [id, setId] = useState("admin");
   const [pw, setPw] = useState("1234");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const pwInputRef = useRef(null);
-  const idInputRef = useRef(null);
+  const handleLogin = async () => {
+    if (isLoading) return;
 
-  useEffect(() => {
-    if (idInputRef.current) {
-      idInputRef.current.focus();
-    }
-  }, []);
-
-  const handleLogin = async (e) => {
-    e.preventDefault();
-
-    switch (true) {
-      case !id:
-        return idInputRef.current?.focus();
-      case !pw:
-        return pwInputRef.current?.focus();
-    }
-    //http://localhost:8080/
+    setIsLoading(true);
     try {
-      // ✅ 경로와 필드명을 백엔드와 동일하게 수정
       const res = await api.post("/api/auth/login", {
         username: id,
         password: pw,
       });
+
       console.log("서버 응답:", res.data);
       alert("로그인되셨습니다.");
-      // localStorage.setItem("token", res.data.token);
-      // navigate("/home");
+      if (res.data?.token) {
+        localStorage.setItem("token", res.data.token);
+      }
     } catch (err) {
       console.error("로그인 실패:", err);
-      alert("로그인 실패! 서버 연결을 확인하세요.");
+
+      if (!err.response) {
+        alert("서버에 연결할 수 없습니다. 서버 상태를 확인해주세요.");
+      } else if (err.response.status === 401) {
+        alert("비밀번호가 틀렸습니다. 다시 확인해주세요.");
+      } else {
+        alert("로그인 실패! 다시 시도해주세요.");
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div>
-      <h1>TeamTalk</h1>
-      <ul>
-        <form onSubmit={handleLogin}>
-          아이디
-          <input
-            ref={idInputRef}
-            value={id}
-            placeholder="아이디"
-            onChange={(e) => setId(e.target.value)}
-          />
-          <br />
-          비밀번호
-          <input
-            ref={pwInputRef}
-            value={pw}
-            onChange={(e) => setPw(e.target.value)}
-            type="password"
-            placeholder="비밀번호"
-          />
-          <br />
-          <button type="button">아이디 찾기</button>
-          <button type="button">비밀번호 찾기</button>
-          <Link to="/signup">
-            <button type="button">회원가입</button>
-          </Link>
-          <br />
-          <button type="submit">로그인</button>
-        </form>
-      </ul>
-    </div>
+    <>
+      <LoginForm
+        id={id}
+        pw={pw}
+        onChangeId={setId}
+        onChangePw={setPw}
+        onSubmit={handleLogin}
+        isLoading={isLoading}
+      />
+    </>
   );
 };
 
